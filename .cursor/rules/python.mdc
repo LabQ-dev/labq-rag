@@ -1,0 +1,76 @@
+---
+description: Python 코드 작성 규칙
+globs: ["**/*.py"]
+---
+
+# Python 코딩 컨벤션
+
+## Type Hints
+
+- 모든 함수의 인자와 반환값에 타입 힌트 필수
+- `from __future__ import annotations` 사용 권장
+- Union 타입은 `X | Y` 문법 사용 (Python 3.10+)
+- Optional은 `X | None` 사용
+
+```python
+# Good
+def process(data: str | None) -> list[dict[str, Any]]:
+    ...
+
+# Bad
+def process(data):
+    ...
+```
+
+## Docstring (Google Style)
+
+```python
+def function_name(arg1: str, arg2: int = 10) -> bool:
+    """함수에 대한 간단한 설명.
+
+    Args:
+        arg1: 첫 번째 인자 설명
+        arg2: 두 번째 인자 설명 (기본값: 10)
+
+    Returns:
+        반환값 설명
+
+    Raises:
+        ValueError: 에러 발생 조건
+    """
+```
+
+## Import 순서
+
+1. 표준 라이브러리
+2. 서드파티 라이브러리
+3. 로컬 모듈
+
+```python
+from __future__ import annotations
+
+import os
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+from src.config import get_settings
+
+if TYPE_CHECKING:
+    from langchain_core.documents import Document
+```
+
+## 금지 사항
+
+- `print()` → `logging` 사용
+- `Any` 타입 남용 → 구체적인 타입 또는 타입 좁히기
+- 하드코딩된 설정값 → config.yaml 사용
+- `# type: ignore` 남용
+
+## 패턴
+
+- 설정: `get_settings()` 싱글톤 패턴
+- 예외 처리: 구체적인 예외 타입 catch
+- 비동기: I/O 작업은 async/await 사용

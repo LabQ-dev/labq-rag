@@ -1,0 +1,94 @@
+---
+description: 문서화 규칙
+globs: ["**/*.py", "**/*.md", "**/*.yaml"]
+---
+
+# 문서화 규칙
+
+## 코드 변경 시 문서 동기화
+
+**핵심: 코드 변경 → 영향받는 모든 문서 업데이트**
+
+### 1. Docstring 업데이트
+
+함수 시그니처가 변경되면 Docstring 반드시 수정:
+
+```python
+# ❌ 나쁜 예
+def index_documents(documents: list[Document]) -> int:
+    """문서를 분할"""  # Args, Returns 없음!
+
+# ✅ 좋은 예
+def index_documents(documents: list[Document]) -> int:
+    """문서를 분할하고 Qdrant에 인덱싱
+
+    Args:
+        documents: LangChain Document 리스트
+
+    Returns:
+        인덱싱된 청크 수
+
+    Raises:
+        ValueError: 빈 청크가 생성될 때
+    """
+```
+
+### 2. API 엔드포인트 변경 시
+
+`src/schemas.py`와 `AGENTS.md`의 API 섹션 동시 업데이트:
+
+```python
+# src/schemas.py에서 필드 추가
+class QueryRequest(BaseModel):
+    question: str
+    language: str = Field(default="ko", example="ko")  # 추가됨
+
+# AGENTS.md에서도 업데이트
+# API 엔드포인트 섹션의 예시 업데이트
+```
+
+### 3. 설정 파일 변경 시
+
+`config.yaml` 또는 `logging.yaml` 변경 시 `AGENTS.md` 업데이트:
+
+```yaml
+# configs/config.yaml에 필드 추가
+retriever:
+  top_k: 5
+  min_score: 0.5  # 새로 추가
+```
+
+```markdown
+# AGENTS.md의 설정 섹션
+### config.yaml
+
+- `retriever.top_k`: 검색 결과 수 (기본: 5)
+- `retriever.min_score`: 최소 유사도 점수 (기본: 0.5)  # 추가됨
+```
+
+### 4. 환경 변수 / 의존성 변경 시
+
+- 새 패키지 추가 → `pyproject.toml` + `AGENTS.md` 의존성 섹션
+- 새 환경변수 → `AGENTS.md` 환경 설정 섹션
+- 새 폴더 구조 → `AGENTS.md` 프로젝트 구조
+
+## 문서화 체크리스트
+
+코드 변경 후 **항상 확인**:
+
+- [ ] Docstring (Args, Returns, Raises) 최신?
+- [ ] AGENTS.md API 섹션 최신?
+- [ ] config.yaml / logging.yaml 변경 시 문서 반영?
+- [ ] 새 모듈/함수 추가 시 README.md 업데이트?
+- [ ] 주석의 "Why"가 명확한가?
+
+## 언제 문서 업데이트 필요한가?
+
+| 변경 | 업데이트 대상 |
+|------|---|
+| 함수 시그니처 변경 | Docstring |
+| 엔드포인트 추가/변경 | schemas.py + AGENTS.md |
+| 설정값 추가/변경 | config.yaml + AGENTS.md |
+| 의존성 추가 | pyproject.toml + AGENTS.md |
+| 폴더 구조 변경 | AGENTS.md |
+| 주요 로직 변경 | 코드 주석 |

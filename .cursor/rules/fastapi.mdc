@@ -1,0 +1,61 @@
+---
+description: FastAPI 엔드포인트 작성 규칙
+globs: ["**/main.py", "**/api/**/*.py", "**/routes/**/*.py"]
+---
+
+# FastAPI 컨벤션
+
+## 엔드포인트 구조
+
+```python
+@app.post("/endpoint", response_model=ResponseModel)
+async def endpoint_name(
+    request: RequestModel,
+    # 의존성 주입
+) -> ResponseModel:
+    """엔드포인트 설명.
+
+    Args:
+        request: 요청 모델
+
+    Returns:
+        응답 모델
+
+    Raises:
+        HTTPException: 에러 상황
+    """
+    try:
+        result = await some_async_operation()
+        return ResponseModel(...)
+    except SomeError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+```
+
+## Pydantic 모델
+
+```python
+class RequestModel(BaseModel):
+    """요청 모델 설명"""
+
+    field_name: str
+    optional_field: int | None = None
+
+
+class ResponseModel(BaseModel):
+    """응답 모델 설명"""
+
+    status: str
+    data: dict[str, Any]
+```
+
+## 에러 처리
+
+- 구체적인 HTTP 상태 코드 사용
+- `from e` 로 원인 예외 체이닝
+- 사용자 친화적인 에러 메시지
+
+## 비동기
+
+- 모든 엔드포인트는 `async def` 사용
+- I/O 작업은 `await` 사용
+- CPU 바운드 작업은 `run_in_executor` 고려

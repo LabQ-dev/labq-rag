@@ -1,0 +1,60 @@
+---
+description: 주석 작성 규칙
+globs: ["**/*.py"]
+---
+
+# 주석 작성 규칙
+
+## Why vs What
+
+- ❌ **하지 말 것**: 코드가 이미 말해주는 "What"
+  ```python
+  # x에 1을 더한다
+  x = x + 1
+
+  # 리스트를 순회한다
+  for item in items:
+      process(item)
+  ```
+
+- ✅ **하세요**: 복잡한 로직의 "Why"
+  ```python
+  # 중복 제거를 위해 sorted() 먼저 사용
+  # (set은 순서를 보장하지 않으므로)
+  unique_sorted = sorted(set(items))
+
+  # Qdrant와의 네트워크 지연을 고려하여
+  # 미리 top_k*2로 검색 후 필터링
+  raw_results = vectorstore.similarity_search(query, k=top_k*2)
+  ```
+
+## 복잡한 로직의 주석
+
+함수 내 복잡한 로직은 **단계 전에** 주석 달기:
+
+```python
+def index_documents(documents: list[Document]) -> int:
+    """문서를 분할하고 Qdrant에 인덱싱"""
+
+    # RecursiveCharacterTextSplitter 선택 이유:
+    # 코드/마크다운 같은 구조화된 텍스트에서
+    # 의미 있는 경계에서 분할하기 위함
+    text_splitter = get_text_splitter()
+    chunks = text_splitter.split_documents(documents)
+
+    # 임베딩은 CPU에서 느리므로 캐싱 필수
+    # get_embeddings()는 @lru_cache로 보호됨
+    embeddings = get_embeddings()
+
+    # Qdrant 컬렉션이 없으면 생성
+    # (기존 컬렉션은 append 모드로 동작)
+    client = get_qdrant_client()
+    ensure_collection_exists(client, embeddings)
+```
+
+## 하나의 주석 작성 방법
+
+1. **구현 선택 이유** (trade-offs)
+2. **성능 고려사항** (왜 이 방식인가)
+3. **외부 의존성** (API 제약, 라이브러리 특성)
+4. **버그 방지** (왜 이렇게 해야 하는가)

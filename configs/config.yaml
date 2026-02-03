@@ -1,0 +1,29 @@
+# LabQ RAG 서비스 설정
+
+embedding:
+  model_name: "BAAI/bge-m3"
+  device: "cpu"
+  normalize: true
+
+splitter:
+  chunk_size: 1000
+  chunk_overlap: 200
+
+retriever:
+  top_k: 5
+  search_type: "similarity"
+
+qdrant:
+  collection_name: "labq_docs"
+  host: "localhost"
+  port: 6333
+
+llm:
+  provider: "google"  # openai, google, anthropic
+  temperature: 0.0
+
+  # 프로바이더별 모델 (provider 값에 따라 해당 모델 사용)
+  # 가성비 기준 선정 (2025-2026)
+  openai_model: "gpt-5-mini"           # $0.25/$2 per 1M tokens
+  google_model: "gemini-3.0-flash"     # Pro급 성능, Flash 가격
+  anthropic_model: "claude-haiku-4-5"  # $1/$5 per 1M tokens
