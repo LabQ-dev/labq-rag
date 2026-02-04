@@ -3,7 +3,7 @@ name = "labq-rag"
 version = "0.1.0"
 description = "RAG service for LabQ internal knowledge"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.12.*"
 dependencies = [
     # LangChain 1.0+ (2025.10 릴리즈)
     "langchain>=1.0.0",
@@ -19,6 +19,7 @@ dependencies = [
     "qdrant-client>=1.16.0",
     "pypdf>=6.6.0",
     # Utils
+    "numpy==1.26.4",  # 2.x 호환성 이슈 방지
     "pyyaml>=6.0.0",
     "pydantic>=2.0.0",
     "langchain-google-genai>=4.2.0",
