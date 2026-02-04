@@ -46,6 +46,7 @@ labq-rag/
 ├── Dockerfile
 ├── data/                   # PDF 저장 디렉토리
 ├── logs/                   # 로그 파일
+├── examples/               # 테스트용 샘플 데이터
 └── tests/                  # 테스트
 ```
 
@@ -97,15 +98,18 @@ def process_document(file_path: str | Path, chunk_size: int = 1000) -> list[Docu
 ## 커밋 메시지 규칙 (Conventional Commits)
 
 ```
-<type>(<scope>): <description>
+<type>: <description>
 
 예시:
-feat(indexer): PDF 멀티페이지 지원 추가
-fix(retriever): 빈 쿼리 시 에러 수정
-docs(readme): 설치 방법 업데이트
-refactor(config): YAML 로더 분리
-test(generator): RAG chain 유닛 테스트 추가
+feat: add PDF multi-page support
+fix: handle empty query error in retriever
+docs: update installation guide
+refactor: separate YAML loader
+test: add RAG chain unit tests
+chore: add sentence-transformers dependency
 ```
+
+**참고:** scope는 사용하지 않습니다. `feat(indexer):` ❌ → `feat:` ✅
 
 **타입**:
 - `feat`: 새 기능
@@ -139,16 +143,31 @@ test(generator): RAG chain 유닛 테스트 추가
 
 ### LLM 프로바이더 설정
 
-`configs/config.yaml`에서 프로바이더 선택:
+`configs/config.yaml`에서 프로바이더 선택 (model 미지정 시 기본값 사용):
 
 ```yaml
 llm:
-  provider: "google"  # openai, google, anthropic
+  provider: "google_genai"   # openai, google_genai, anthropic
+  # model: "gemini-3-flash-preview"  # 미지정 시 기본값 사용
   temperature: 0.0
-  openai_model: "gpt-5-mini"
-  google_model: "gemini-3.0-flash"
-  anthropic_model: "claude-haiku-4-5"
+  timeout: 30  # 초
+
+qdrant:
+  host: "${QDRANT_HOST:-localhost}"  # Docker: qdrant, 로컬: localhost
+  timeout: 5  # 초
 ```
+
+**프로바이더별 기본 모델:**
+- `openai` → gpt-4o-mini
+- `google_genai` → gemini-3-flash-preview
+- `anthropic` → claude-3-5-haiku-latest
+
+**타임아웃 설정:**
+- Qdrant: 5초 (연결/검색)
+- LLM: 30초 (응답 생성)
+
+`init_chat_model`을 사용하여 provider 문자열로 동적 LLM 생성.
+provider 이름은 LangChain의 `init_chat_model` 규격을 따릅니다.
 
 ### 로깅
 

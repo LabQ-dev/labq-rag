@@ -1,0 +1,24 @@
+{
+  "description": "RAG 시스템 테스트용 질문 목록",
+  "source_document": "examples/협업 및 커뮤니케이션 컨벤션.pdf",
+  "queries": [
+    {
+      "id": 1,
+      "question": "코드 리뷰는 PR 생성 후 몇 시간 이내에 해야 하나요?",
+      "expected_keywords": ["24시간", "1차 리뷰", "48시간", "approve"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 2,
+      "question": "실험 브랜치 이름은 어떤 형식으로 만들어야 하고, 실험 결과는 어디에 저장하나요?",
+      "expected_keywords": ["exp/", "담당자명", "실험내용", "/docs/experiments/"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 3,
+      "question": "새로운 기능을 merge하려면 어떤 조건들을 충족해야 하나요?",
+      "expected_keywords": ["5%", "성능 향상", "approve", "테스트"],
+      "difficulty": "hard"
+    }
+  ]
+}

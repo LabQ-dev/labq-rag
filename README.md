@@ -37,6 +37,7 @@ labq-rag/
 │   └── generator.py        # LLM 응답 생성
 ├── data/                   # PDF 저장 디렉토리
 ├── logs/                   # 로그 파일
+├── examples/               # 테스트용 샘플 데이터
 ├── .github/
 │   ├── ISSUE_TEMPLATE/     # 이슈 템플릿
 │   └── PULL_REQUEST_TEMPLATE.md
@@ -134,16 +135,20 @@ retriever:
 
 qdrant:
   collection_name: "labq_docs"
-  host: "localhost"
+  host: "${QDRANT_HOST:-localhost}"  # Docker: qdrant, 로컬: localhost
   port: 6333
+  timeout: 5  # 초
 
 llm:
-  provider: "google"         # openai, google, anthropic
+  provider: "google_genai"   # openai, google_genai, anthropic
   temperature: 0.0
-  openai_model: "gpt-5-mini"
-  google_model: "gemini-3.0-flash"
-  anthropic_model: "claude-haiku-4-5"
+  timeout: 30  # 초
 ```
+
+**프로바이더별 기본 모델** (model 미지정 시 자동 사용):
+- `openai` → gpt-4o-mini
+- `google_genai` → gemini-3-flash-preview
+- `anthropic` → claude-3-5-haiku-latest
 
 ### configs/secrets.yaml
 
