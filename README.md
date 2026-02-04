@@ -9,6 +9,7 @@ PDF 문서 기반 RAG(Retrieval-Augmented Generation) 서비스입니다.
 - **Qdrant** - 벡터 데이터베이스
 - **FastAPI** - REST API
 - **bge-m3** - 임베딩 모델
+- **LLM**: OpenAI / Google Gemini / Anthropic Claude (선택 가능)
 - **uv** - 패키지 관리
 
 ## 프로젝트 구조
@@ -17,19 +18,28 @@ PDF 문서 기반 RAG(Retrieval-Augmented Generation) 서비스입니다.
 labq-rag/
 ├── pyproject.toml          # 의존성 정의
 ├── uv.lock                 # 버전 잠금 파일
-├── config.yaml             # 앱 설정
-├── secrets.yaml            # 비밀 정보 (Git 제외)
-├── secrets.example.yaml    # 비밀 정보 템플릿
+├── .python-version         # Python 버전 고정
+├── configs/
+│   ├── config.yaml         # 앱 설정 (Git 관리)
+│   ├── logging.yaml        # 로깅 설정
+│   ├── secrets.yaml        # 비밀 정보 (Git 제외)
+│   └── secrets.example.yaml# 비밀 정보 템플릿
 ├── Dockerfile
-├── docker-compose.yml
+├── compose.yaml
 ├── src/
 │   ├── __init__.py
 │   ├── main.py             # FastAPI 엔드포인트
 │   ├── config.py           # 설정 로더
+│   ├── logger.py           # 로깅 설정
+│   ├── schemas.py          # Pydantic 스키마
 │   ├── indexer.py          # PDF 인덱싱
 │   ├── retriever.py        # 벡터 검색
 │   └── generator.py        # LLM 응답 생성
 ├── data/                   # PDF 저장 디렉토리
+├── logs/                   # 로그 파일
+├── .github/
+│   ├── ISSUE_TEMPLATE/     # 이슈 템플릿
+│   └── PULL_REQUEST_TEMPLATE.md
 └── tests/
 ```
 
@@ -38,16 +48,16 @@ labq-rag/
 ### 1. 사전 요구사항
 
 - Docker & Docker Compose
-- OpenAI API 키
+- API 키 (OpenAI / Google / Anthropic 중 하나)
 
 ### 2. 설정
 
 ```bash
 # secrets.yaml 생성
-cp secrets.example.yaml secrets.yaml
+cp configs/secrets.example.yaml configs/secrets.yaml
 
-# OpenAI API 키 입력
-# secrets.yaml 파일을 편집하여 api_key 값을 입력하세요
+# API 키 입력
+# configs/secrets.yaml 파일을 편집하여 사용할 프로바이더의 api_key 값을 입력하세요
 ```
 
 ### 3. 실행 (Docker)
@@ -106,7 +116,7 @@ curl -X POST http://localhost:8000/query \
 
 ## 설정
 
-### config.yaml
+### configs/config.yaml
 
 앱 설정 파일입니다. Git으로 관리됩니다.
 
@@ -128,18 +138,26 @@ qdrant:
   port: 6333
 
 llm:
-  provider: "openai"
-  model: "gpt-4o-mini"
+  provider: "google"         # openai, google, anthropic
   temperature: 0.0
+  openai_model: "gpt-5-mini"
+  google_model: "gemini-3.0-flash"
+  anthropic_model: "claude-haiku-4-5"
 ```
 
-### secrets.yaml
+### configs/secrets.yaml
 
 비밀 정보 파일입니다. **Git에 커밋하지 마세요.**
 
 ```yaml
 openai:
   api_key: "sk-your-api-key"
+
+google:
+  api_key: "your-gemini-api-key"
+
+anthropic:
+  api_key: "your-claude-api-key"
 ```
 
 ## 개발
@@ -155,6 +173,12 @@ uv run pytest
 ```bash
 uv run ruff check src/
 uv run ruff format src/
+```
+
+### Pre-commit 훅 설치
+
+```bash
+uv run pre-commit install
 ```
 
 ## 라이선스

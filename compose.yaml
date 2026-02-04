@@ -15,8 +15,8 @@ services:
       - "8000:8000"
     volumes:
       - ./data:/app/data
-      - ./config.yaml:/app/config.yaml:ro
-      - ./secrets.yaml:/app/secrets.yaml:ro
+      - ./logs:/app/logs
+      - ./configs:/app/configs:ro
     depends_on:
       - qdrant
     environment:

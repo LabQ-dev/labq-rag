@@ -10,14 +10,13 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
 # 설정 파일 복사
-COPY config.yaml ./
-COPY secrets.yaml ./
+COPY configs ./configs
 
 # 소스 코드 복사
 COPY src ./src
 
-# 데이터 디렉토리 생성
-RUN mkdir -p /app/data
+# 디렉토리 생성
+RUN mkdir -p /app/data /app/logs
 
 EXPOSE 8000
 

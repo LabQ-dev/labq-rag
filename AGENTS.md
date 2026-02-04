@@ -9,13 +9,13 @@ LabQ 내부 지식을 활용하여 질문에 답변하는 것이 목표입니다
 
 ## 기술 스택
 
-- **언어**: Python 3.12
-- **패키지 관리**: uv
+- **언어**: Python 3.12 (`.python-version`으로 고정)
+- **패키지 관리**: uv (`uv.lock`으로 버전 잠금)
 - **웹 프레임워크**: FastAPI
 - **RAG 프레임워크**: LangChain 1.0+, LangGraph
 - **벡터 DB**: Qdrant
-- **임베딩 모델**: bge-m3 (HuggingFace)
-- **LLM**: OpenAI GPT-4o-mini
+- **임베딩 모델**: bge-m3 (HuggingFace, 로컬 CPU)
+- **LLM**: OpenAI / Google Gemini / Anthropic Claude (설정으로 선택)
 - **컨테이너**: Docker, Docker Compose
 
 ## 프로젝트 구조
@@ -25,12 +25,27 @@ labq-rag/
 ├── src/                    # 소스 코드 (플랫 구조)
 │   ├── main.py             # FastAPI 엔드포인트
 │   ├── config.py           # YAML 설정 로더
+│   ├── logger.py           # 로깅 설정
+│   ├── schemas.py          # Pydantic 스키마
 │   ├── indexer.py          # PDF 인덱싱
 │   ├── retriever.py        # 벡터 검색
 │   └── generator.py        # RAG 응답 생성 (LCEL)
-├── config.yaml             # 앱 설정 (Git 관리)
-├── secrets.yaml            # 비밀 정보 (Git 제외)
+├── configs/                # 설정 파일
+│   ├── config.yaml         # 앱 설정 (Git 관리)
+│   ├── logging.yaml        # 로깅 설정 (Git 관리)
+│   ├── secrets.yaml        # 비밀 정보 (Git 제외)
+│   └── secrets.example.yaml# 비밀 정보 템플릿
+├── .github/                # GitHub 템플릿
+│   ├── ISSUE_TEMPLATE/
+│   └── PULL_REQUEST_TEMPLATE.md
+├── .cursor/rules/          # Cursor IDE 규칙
+├── pyproject.toml          # 의존성 정의
+├── uv.lock                 # 버전 잠금 파일
+├── .python-version         # Python 버전 (3.12)
+├── compose.yaml            # Docker Compose
+├── Dockerfile
 ├── data/                   # PDF 저장 디렉토리
+├── logs/                   # 로그 파일
 └── tests/                  # 테스트
 ```
 
@@ -74,7 +89,7 @@ def process_document(file_path: str | Path, chunk_size: int = 1000) -> list[Docu
 
 ### 권장 패턴
 
-- **설정**: config.yaml (앱 설정), secrets.yaml (비밀 정보)
+- **설정**: `configs/config.yaml` (앱 설정), `configs/secrets.yaml` (비밀 정보)
 - **RAG Chain**: LCEL (LangChain Expression Language) 사용
 - **비동기**: FastAPI 엔드포인트는 async/await 사용
 - **의존성 주입**: `get_settings()` 같은 팩토리 함수 사용
@@ -109,6 +124,7 @@ test(generator): RAG chain 유닛 테스트 추가
 - fastapi >= 0.128.0
 - qdrant-client >= 1.16.0
 - pypdf >= 6.6.0
+- numpy == 1.26.4 (2.x 호환성 이슈 방지)
 
 ## 설정 관리
 
@@ -121,16 +137,30 @@ test(generator): RAG chain 유닛 테스트 추가
 - `configs/secrets.example.yaml`: 비밀 정보 템플릿 (Git 관리)
 - `configs/logging.yaml`: 로깅 설정 (Git 관리)
 
+### LLM 프로바이더 설정
+
+`configs/config.yaml`에서 프로바이더 선택:
+
+```yaml
+llm:
+  provider: "google"  # openai, google, anthropic
+  temperature: 0.0
+  openai_model: "gpt-5-mini"
+  google_model: "gemini-3.0-flash"
+  anthropic_model: "claude-haiku-4-5"
+```
+
 ### 로깅
 
 QueueHandler + RotatingFileHandler를 사용한 스레드 안전 로깅:
 
 ```python
-from src.logger import setup_logging, get_logger
+import logging
+from src.logger import setup_logging
 
-# 앱 시작 시 (main.py에서 수행됨)
+# 앱 시작 시 (main.py에서 한 번만)
 setup_logging()
-logger = get_logger(__name__)
+logger = logging.getLogger()  # 루트 로거 사용
 
 # 사용
 logger.debug("디버그 정보")
@@ -281,6 +311,9 @@ uv run pytest
 # 린트
 uv run ruff check src/
 uv run ruff format src/
+
+# Pre-commit 설치
+uv run pre-commit install
 ```
 
 ## API 엔드포인트
@@ -293,6 +326,7 @@ uv run ruff format src/
 
 ## 환경 설정
 
-1. `secrets.example.yaml`을 `secrets.yaml`로 복사
-2. OpenAI API 키 입력
-3. Docker로 Qdrant 실행 또는 docker-compose 사용
+1. `configs/secrets.example.yaml`을 `configs/secrets.yaml`로 복사
+2. 사용할 프로바이더의 API 키 입력
+3. `configs/config.yaml`에서 `llm.provider` 설정
+4. Docker로 Qdrant 실행 또는 `docker compose up` 사용
