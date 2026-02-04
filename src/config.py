@@ -74,18 +74,20 @@ class QdrantConfig(BaseModel):
     collection_name: str = "labq_docs"
     host: str = "localhost"
     port: int = 6333
+    timeout: int = 5  # 초
 
 
 class LLMConfig(BaseModel):
-    """LLM 설정"""
+    """LLM 설정
 
-    provider: str = "google"  # openai, google, anthropic
+    provider: openai, google_genai, anthropic
+    model: 프로바이더에 맞는 모델명 (미지정 시 기본값 사용)
+    """
+
+    provider: str = "google_genai"
+    model: str | None = None  # None이면 프로바이더별 기본값 사용
     temperature: float = 0.0
-
-    # 프로바이더별 모델 (가성비 기준, 2025-2026)
-    openai_model: str = "gpt-5-mini"
-    google_model: str = "gemini-3.0-flash"
-    anthropic_model: str = "claude-haiku-4-5"
+    timeout: int = 30  # 초
 
 
 class AppConfig(BaseModel):

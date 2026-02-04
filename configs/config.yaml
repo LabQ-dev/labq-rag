@@ -15,15 +15,18 @@ retriever:
 
 qdrant:
   collection_name: "labq_docs"
-  host: "localhost"
+  host: "${QDRANT_HOST:-localhost}"  # Docker: qdrant, 로컬: localhost
   port: 6333
+  timeout: 5  # 초
 
 llm:
-  provider: "google"  # openai, google, anthropic
+  # 지원 프로바이더: openai, google_genai, anthropic
+  provider: "google_genai"
+  # model: "gemini-3-flash-preview"  # 미지정 시 프로바이더별 기본값 사용
   temperature: 0.0
+  timeout: 30  # 초
 
-  # 프로바이더별 모델 (provider 값에 따라 해당 모델 사용)
-  # 가성비 기준 선정 (2025-2026)
-  openai_model: "gpt-5-mini"           # $0.25/$2 per 1M tokens
-  google_model: "gemini-3.0-flash"     # Pro급 성능, Flash 가격
-  anthropic_model: "claude-haiku-4-5"  # $1/$5 per 1M tokens
+  # 프로바이더별 기본 모델 (참고용)
+  # openai: gpt-4o-mini
+  # google_genai: gemini-3-flash-preview
+  # anthropic: claude-3-5-haiku-latest

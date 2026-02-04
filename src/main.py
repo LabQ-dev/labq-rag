@@ -138,12 +138,27 @@ async def query_documents(request: QueryRequest) -> QueryResponse:
     logger.info(f"쿼리 처리 시작: {request.question[:50]}...")
 
     settings = get_settings()
+    provider = settings.config.llm.provider
 
-    if not settings.secrets.openai_api_key:
-        logger.error("OpenAI API 키가 설정되지 않음")
+    # 프로바이더별 API 키 검증
+    api_key_map = {
+        "openai": settings.secrets.openai_api_key,
+        "google_genai": settings.secrets.google_api_key,
+        "anthropic": settings.secrets.anthropic_api_key,
+    }
+
+    if provider not in api_key_map:
+        logger.error(f"지원하지 않는 프로바이더: {provider}")
         raise HTTPException(
             status_code=500,
-            detail="OpenAI API 키가 설정되지 않았습니다. secrets.yaml을 확인하세요.",
+            detail=f"지원하지 않는 프로바이더: {provider}",
+        )
+
+    if not api_key_map[provider]:
+        logger.error(f"{provider} API 키가 설정되지 않음")
+        raise HTTPException(
+            status_code=500,
+            detail=f"{provider} API 키가 설정되지 않았습니다. secrets.yaml을 확인하세요.",
         )
 
     try:

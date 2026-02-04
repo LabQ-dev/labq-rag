@@ -50,6 +50,7 @@ def get_qdrant_client() -> QdrantClient:
     return QdrantClient(
         host=settings.config.qdrant.host,
         port=settings.config.qdrant.port,
+        timeout=settings.config.qdrant.timeout,
     )
 
 
