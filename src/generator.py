@@ -14,10 +14,10 @@ from typing import TYPE_CHECKING
 from langchain.chat_models import init_chat_model
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
 from src.config import get_settings
-from src.retriever import get_retriever
+from src.retriever import get_retriever, retrieve_advanced
 
 if TYPE_CHECKING:
     from langchain_core.documents import Document
@@ -116,19 +116,57 @@ def get_rag_chain() -> Runnable:
     4. LLM으로 응답 생성
     5. 문자열로 파싱
 
+    config.yaml의 retriever.search_type에 따라 검색 전략이 결정됩니다:
+    - "similarity", "mmr": 기본 retriever 사용
+    - "threshold", "hybrid", "rerank": retrieve_advanced 사용
+    - "metadata": retrieve_advanced 사용 (metadata_filter 필요)
+
     Returns:
         실행 가능한 RAG 체인
     """
-    retriever = get_retriever()
+    settings = get_settings()
+    search_type = settings.config.retriever.search_type.lower()
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(RAG_PROMPT_TEMPLATE)
 
-    return (
-        {"context": retriever | format_docs, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
+    # 고급 전략은 retrieve_advanced 사용
+    advanced_strategies = ("threshold", "hybrid", "rerank", "metadata")
+    
+    if search_type in advanced_strategies:
+        # retrieve_advanced를 사용하는 경우
+        # LCEL에서 함수를 직접 호출하도록 설정
+        
+        def retrieve_docs(question: str) -> str:
+            """질문을 받아 검색된 문서를 포맷팅된 문자열로 반환"""
+            # 전략별 파라미터 설정
+            kwargs = {}
+            if search_type == "threshold":
+                kwargs["score_threshold"] = 0.7
+            elif search_type == "hybrid":
+                kwargs["vector_weight"] = 0.7
+            elif search_type == "rerank":
+                kwargs["rerank_top_n"] = None  # 기본값 사용
+            
+            docs = retrieve_advanced(question, strategy=search_type, **kwargs)
+            return format_docs(docs)
+        
+        retriever_func = RunnableLambda(retrieve_docs)
+        
+        return (
+            {"context": retriever_func, "question": RunnablePassthrough()}
+            | prompt
+            | llm
+            | StrOutputParser()
+        )
+    else:
+        # 기본 retriever 사용 (similarity, mmr)
+        retriever = get_retriever()
+        return (
+            {"context": retriever | format_docs, "question": RunnablePassthrough()}
+            | prompt
+            | llm
+            | StrOutputParser()
+        )
 
 
 def generate(question: str) -> str:
