@@ -18,7 +18,7 @@ services:
       - ./logs:/app/logs
       - ./configs:/app/configs:ro
       - ./src:/app/src
-    command: ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command: ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/src", "--reload-dir", "/app/configs"]
     depends_on:
       - qdrant
     environment:
