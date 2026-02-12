@@ -1,6 +1,6 @@
 ---
 description: LangChain RAG 코드 작성 규칙
-globs: ["**/indexer.py", "**/retriever.py", "**/generator.py", "**/chain*.py"]
+globs: ["**/indexer.py", "**/retriever.py", "**/generator.py", "**/prompts.py", "**/chain*.py"]
 ---
 
 # LangChain 컨벤션 (1.0+)
@@ -25,21 +25,49 @@ rag_chain = (
 )
 ```
 
+## Citation + 문서 태깅 (항상 적용)
+
+문서에 번호 태깅 후 재배치. Citation은 프롬프트에 항상 내장:
+
+```python
+def tag_docs(docs: list[Document]) -> str:
+    """문서에 [문서N] 태그를 붙여 포맷팅"""
+    return "\n\n".join(f"[문서{i+1}] {doc.page_content}" for i, doc in enumerate(docs))
+
+def reorder_docs(docs: list[Document]) -> list[Document]:
+    """Lost in the Middle: 1위->앞, 2위->뒤, 나머지->중간"""
+    if len(docs) <= 2:
+        return docs
+    return [docs[0]] + docs[2:] + [docs[1]]
+```
+
+## Structured Output
+
+Pydantic 모델로 응답 스키마 제어:
+
+```python
+chain = prompt | llm.with_structured_output(RAGAnswer)
+result = chain.invoke(...)  # RAGAnswer 인스턴스 반환
+```
+
 ## 임포트 규칙
 
 - `langchain_core`: 핵심 추상화 (Document, Runnable 등)
 - `langchain_community`: 커뮤니티 통합 (로더 등)
 - `langchain_openai`: OpenAI 통합
-- `langchain_huggingface`: HuggingFace 통합
+- `langchain_google_genai`: Google GenAI 통합
+- `langchain_anthropic`: Anthropic 통합
 - `langchain_qdrant`: Qdrant 통합
 
 ```python
 # Good - 구체적인 패키지에서 임포트
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_qdrant import QdrantVectorStore
 
 # Bad - langchain에서 직접 임포트 (deprecated)
 from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import init_chat_model
 ```
 
 ## 벡터 스토어

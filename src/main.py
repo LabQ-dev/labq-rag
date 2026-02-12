@@ -16,7 +16,13 @@ from src.config import get_settings
 from src.generator import agenerate
 from src.indexer import index_pdf
 from src.logger import setup_logging
-from src.schemas import HealthResponse, IndexResponse, QueryRequest, QueryResponse
+from src.schemas import (
+    HealthResponse,
+    IndexResponse,
+    QueryRequest,
+    QueryResponse,
+    RAGAnswer,
+)
 
 # 로깅 초기화
 setup_logging()
@@ -162,8 +168,8 @@ async def query_documents(request: QueryRequest) -> QueryResponse:
         )
 
     try:
-        answer = await agenerate(request.question)
-        logger.info(f"쿼리 처리 완료: {len(answer)} 글자 응답")
+        result = await agenerate(request.question)
+        logger.info(f"쿼리 처리 완료: {type(result).__name__}")
     except Exception as e:
         logger.error(f"응답 생성 실패: {e}", exc_info=True)
         raise HTTPException(
@@ -171,9 +177,17 @@ async def query_documents(request: QueryRequest) -> QueryResponse:
             detail=f"응답 생성 실패: {e}",
         ) from e
 
+    # structured_output 활성 시 RAGAnswer → QueryResponse 매핑
+    if isinstance(result, RAGAnswer):
+        return QueryResponse(
+            question=request.question,
+            answer=result.answer,
+            confidence=result.confidence,
+            sources=result.sources,
+        )
     return QueryResponse(
         question=request.question,
-        answer=answer,
+        answer=result,
     )
 
 

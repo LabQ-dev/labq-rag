@@ -90,6 +90,17 @@ class LLMConfig(BaseModel):
     timeout: int = 30  # 초
 
 
+class GenerationConfig(BaseModel):
+    """생성 단계 설정
+
+    reorder_docs: Lost in the Middle 재배치 적용 여부
+    structured_output: Structured Output(RAGAnswer) 사용 여부
+    """
+
+    reorder_docs: bool = True
+    structured_output: bool = False
+
+
 class AppConfig(BaseModel):
     """애플리케이션 전체 설정"""
 
@@ -98,6 +109,7 @@ class AppConfig(BaseModel):
     retriever: RetrieverConfig = RetrieverConfig()
     qdrant: QdrantConfig = QdrantConfig()
     llm: LLMConfig = LLMConfig()
+    generation: GenerationConfig = GenerationConfig()
 
 
 class SecretsConfig(BaseModel):

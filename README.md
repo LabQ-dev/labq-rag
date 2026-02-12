@@ -34,6 +34,7 @@ labq-rag/
 │   ├── schemas.py          # Pydantic 스키마
 │   ├── indexer.py          # PDF 인덱싱
 │   ├── retriever.py        # 벡터 검색
+│   ├── prompts.py          # 프롬프트 빌더 + 문서 처리
 │   └── generator.py        # LLM 응답 생성
 ├── data/                   # PDF 저장 디렉토리
 ├── logs/                   # 로그 파일
@@ -143,6 +144,10 @@ llm:
   provider: "google_genai"   # openai, google_genai, anthropic
   temperature: 0.0
   timeout: 30  # 초
+
+generation:
+  reorder_docs: true        # Lost in the Middle 재배치 on/off
+  structured_output: false  # Structured Output on/off
 ```
 
 **프로바이더별 기본 모델** (model 미지정 시 자동 사용):
