@@ -21,7 +21,7 @@ qdrant:
 
 llm:
   # 지원 프로바이더: openai, google_genai, anthropic
-  provider: "google_genai"
+  provider: "openai"
   # model: "gemini-3-flash-preview"  # 미지정 시 프로바이더별 기본값 사용
   temperature: 0.0
   timeout: 30  # 초
