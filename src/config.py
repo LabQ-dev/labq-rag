@@ -65,7 +65,7 @@ class RetrieverConfig(BaseModel):
     """검색 설정"""
 
     top_k: int = 5
-    search_type: str = "similarity"
+    search_type: str = "mmr"
 
 
 class QdrantConfig(BaseModel):
