@@ -29,6 +29,7 @@ labq-rag/
 │   ├── schemas.py          # Pydantic 스키마
 │   ├── indexer.py          # PDF 인덱싱
 │   ├── retriever.py        # 벡터 검색
+│   ├── prompts.py          # 프롬프트 빌더 + 문서 처리
 │   └── generator.py        # RAG 응답 생성 (LCEL)
 ├── configs/                # 설정 파일
 │   ├── config.yaml         # 앱 설정 (Git 관리)
@@ -169,6 +170,24 @@ qdrant:
 `init_chat_model`을 사용하여 provider 문자열로 동적 LLM 생성.
 provider 이름은 LangChain의 `init_chat_model` 규격을 따릅니다.
 
+### 생성(Generation) 설정
+
+`configs/config.yaml`에서 RAG 생성 기법을 제어합니다:
+
+```yaml
+generation:
+  reorder_docs: true        # Lost in the Middle 재배치 on/off
+  structured_output: false  # Structured Output on/off (false면 plain text)
+```
+
+**기법 설명:**
+- **Citation + 문서 태깅**: 항상 적용. 검색된 문서에 `[문서N]` 태그를 붙이고 답변에 출처 명시를 요구
+- **Lost in the Middle 재배치** (`reorder_docs`): LLM이 컨텍스트 앞/뒤에 더 주의를 기울이는 특성 활용. 1위→맨앞, 2위→맨뒤, 나머지→중간 배치
+- **Structured Output** (`structured_output`): `with_structured_output(RAGAnswer)` 사용. 답변, 신뢰도, 참조 문서 목록을 JSON으로 반환
+
+**프롬프트 빌더 패턴** (`src/prompts.py`):
+프롬프트 블록을 동적으로 조합합니다. 추후 CoT 등 기법 추가 시 config 플래그 토글로 확장 가능.
+
 ### 로깅
 
 QueueHandler + RotatingFileHandler를 사용한 스레드 안전 로깅:
@@ -248,6 +267,8 @@ def get_llm():
 - [ ] LCEL 파이프라인 사용?
 - [ ] retriever는 적절한 top_k 설정?
 - [ ] prompt 템플릿 명확?
+- [ ] Citation ([문서N]) 출처 추적 포함?
+- [ ] 문서 재배치 config 반영?
 
 ### 커밋
 - [ ] Conventional Commits 형식?

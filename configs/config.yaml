@@ -30,3 +30,7 @@ llm:
   # openai: gpt-4o-mini
   # google_genai: gemini-3-flash-preview
   # anthropic: claude-3-5-haiku-latest
+
+generation:
+  reorder_docs: true        # Lost in the Middle 재배치 on/off
+  structured_output: false  # Structured Output on/off (false면 plain text)
