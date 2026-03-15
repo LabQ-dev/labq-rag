@@ -1,6 +1,7 @@
 """벡터 검색 모듈
 
 Qdrant에서 유사한 문서 청크를 검색합니다.
+MMR (Maximal Marginal Relevance) 검색을 사용합니다.
 """
 
 from __future__ import annotations
@@ -34,52 +35,25 @@ def get_vectorstore() -> QdrantVectorStore:
 
 
 def get_retriever() -> VectorStoreRetriever:
-    """검색기 인스턴스 반환
+    """MMR 검색기 인스턴스 반환
+
+    MMR (Maximal Marginal Relevance) 검색을 사용하여
+    관련성과 다양성을 균형있게 고려한 문서를 검색합니다.
 
     Returns:
-        설정된 top_k와 search_type을 사용하는 retriever
+        MMR 검색을 사용하는 retriever
     """
     settings = get_settings()
     vectorstore = get_vectorstore()
+    top_k = settings.config.retriever.top_k
 
     return vectorstore.as_retriever(
-        search_type=settings.config.retriever.search_type,
-        search_kwargs={"k": settings.config.retriever.top_k},
+        search_type="mmr",
+        search_kwargs={
+            "k": top_k,
+            "fetch_k": top_k * 2,  # 다양성을 위해 더 많은 후보 검색
+            "lambda_mult": 0.5,  # 관련성/다양성 균형 (0.5 = 균형)
+        },
     )
 
 
-def retrieve(query: str) -> list[Document]:
-    """쿼리와 유사한 문서 검색
-
-    Args:
-        query: 검색 쿼리
-
-    Returns:
-        유사한 Document 리스트
-    """
-    logger.debug(f"검색 시작: {query[:50]}...")
-    retriever = get_retriever()
-    docs = retriever.invoke(query)
-    logger.info(f"검색 완료: {len(docs)}개 문서 검색됨")
-    return docs
-
-
-def retrieve_with_scores(query: str) -> list[tuple[Document, float]]:
-    """쿼리와 유사한 문서를 점수와 함께 검색
-
-    Args:
-        query: 검색 쿼리
-
-    Returns:
-        (Document, score) 튜플 리스트
-    """
-    logger.debug(f"점수와 함께 검색: {query[:50]}...")
-    settings = get_settings()
-    vectorstore = get_vectorstore()
-
-    results = vectorstore.similarity_search_with_score(
-        query=query,
-        k=settings.config.retriever.top_k,
-    )
-    logger.info(f"검색 완료: {len(results)}개 결과")
-    return results
