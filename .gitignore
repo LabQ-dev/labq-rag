@@ -49,3 +49,6 @@ qdrant_storage/
 logs/
 *.log
 *.log.*
+
+# 실험 결과 (환경마다 다르므로 Git 제외)
+scripts/results/
